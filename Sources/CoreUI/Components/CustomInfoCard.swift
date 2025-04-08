@@ -10,22 +10,16 @@ import ContactsUI
 import SwiftUI
 
 public struct CustomInfoCard: View {
-    let driverDetails: [(label: String, info: String)] = [
-        ("Nom", "Ahmed"),
-        ("Prénom", "Zribi"),
-        ("Agence", "Sofrecom"),
-        ("Email", "flen.foulen@sofrecom.com"),
-        ("Telephone", "98750561"),
-    ]
-
+    let details: [(label: String, info: String)]
     let radius: CGFloat
     let shadow: CGFloat
     let bgColor: Color
 
-    public init(radius: CGFloat = 0, shadow: CGFloat = 0, bgColor: Color = .white) {
+    public init(radius: CGFloat = 0, shadow: CGFloat = 0, bgColor: Color = .white,details: [(label: String, info: String)]) {
         self.radius = radius
         self.shadow = shadow
         self.bgColor = bgColor
+        self.details = details
     }
     public var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -36,7 +30,7 @@ public struct CustomInfoCard: View {
             HStack(spacing: 20) {
                 CustomAsyncImage()
                 VStack(spacing: 5) {
-                    ForEach(driverDetails, id: \.label) { detail in
+                    ForEach(details, id: \.label) { detail in
                         HStack {
                             Text(detail.label)
                                 .font(.footnote)
@@ -71,22 +65,17 @@ public struct CustomInfoCard: View {
         let contact = CNMutableContact()
 
         // Extracting values from the dict
-        let nom = driverDetails.first(where: { $0.label == "Nom" })?.info ?? ""
+        let nom = details.first(where: { $0.label == "Nom" })?.info ?? ""
         let prenom =
-            driverDetails.first(where: { $0.label == "Prénom" })?.info ?? ""
+            details.first(where: { $0.label == "Prénom" })?.info ?? ""
         let agence =
-            driverDetails.first(where: { $0.label == "Agence" })?.info ?? ""
-        let email =
-            driverDetails.first(where: { $0.label == "Email" })?.info ?? ""
+            details.first(where: { $0.label == "Agence" })?.info ?? ""
         let telephone =
-            driverDetails.first(where: { $0.label == "Telephone" })?.info ?? ""
+            details.first(where: { $0.label == "Telephone" })?.info ?? ""
 
         contact.givenName = prenom
         contact.familyName = nom
         contact.organizationName = agence
-        contact.emailAddresses = [
-            CNLabeledValue(label: CNLabelWork, value: email as NSString)
-        ]
         contact.phoneNumbers = [
             CNLabeledValue(
                 label: CNLabelPhoneNumberMobile,
@@ -109,5 +98,10 @@ public struct CustomInfoCard: View {
 }
 
 #Preview {
-    CustomInfoCard()
+    CustomInfoCard(details: [
+        ("Nom", "N/A"),
+        ("Prénom", "N/A"),
+        ("Agence", "N/A"),
+        ("Telephone", "N/A")
+    ])
 }

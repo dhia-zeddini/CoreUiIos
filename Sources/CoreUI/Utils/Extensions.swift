@@ -29,7 +29,32 @@ extension View {
     public  func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View {
         clipShape(RoundedCorner(radius: radius, corners: corners))
     }
+    
+    /// Adds an error alert to the view.
+    ///
+    /// - Parameter errorState: The state of the error alert.
+    /// - Returns: The modified view with the error alert.
+    public func errorAlert(errorState: ErrorState) -> some View {
+        alert("Error", isPresented: .constant(errorState.isPresented)) {
+            Button("OK") {}
+        } message: {
+            Text(errorState.message)
+        }
+    }
+    
+    /// Adds a loading overlay to the view.
+    ///
+    /// - Parameter isLoading: Whether the view is currently loading.
+    /// - Returns: The modified view with the loading overlay.
+    public func loadingOverlay(isLoading: Bool) -> some View {
+        overlay {
+            if isLoading {
+                Skeleton()
+            }
+        }
+    }
 }
+
 
 
 extension String {

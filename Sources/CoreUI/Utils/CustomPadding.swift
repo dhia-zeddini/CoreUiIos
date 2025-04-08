@@ -27,6 +27,10 @@ public struct ScreenSize {
     public static var width: CGFloat {
         UIScreen.main.bounds.size.width
     }
+    public static var width12: CGFloat {
+        width
+        * 0.5
+    }
     public static var width14: CGFloat {
         width
         * 0.25
