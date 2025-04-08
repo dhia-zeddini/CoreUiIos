@@ -21,18 +21,32 @@ import SwiftUI
 
 public struct CustomMenu: View {
     let menuItems: [MenuItemModel]
-    
+    @State private var isNavigationPresented: Bool = false
+    @State private var navigationDestination: () -> AnyView = {
+        AnyView(EmptyView())
+    }
+
     public init(menuItems: [MenuItemModel]) {
         self.menuItems = menuItems
     }
-    
+
     public var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 10) {
-                ForEach(menuItems, id: \.id) { item in
-                    MenuItem(item: item)
+        if #available(iOS 16.0, *) {
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(menuItems, id: \.id) { item in
+                        MenuItem(
+                            item: item,
+                            isNavigationPresented: $isNavigationPresented,
+                            navigationDestination: $navigationDestination
+                        )
+                    }
                 }
+            }.navigationDestination(isPresented: $isNavigationPresented) {
+                navigationDestination()
             }
+        } else {
+            // Fallback on earlier versions
         }
     }
 }

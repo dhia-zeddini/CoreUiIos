@@ -18,6 +18,7 @@ import SwiftUI
 ///   - isDestructive: Marks the item as destructive (e.g., logout).
 ///   - showArrow: Determines whether a right arrow is shown for navigation.
 ///   - action: Closure that defines the action performed when the item is selected.
+///   - navigationDestination: Optinal View that defines the navigation destination when the item is selected.
 ///
 /// # Example
 /// ```
@@ -27,32 +28,48 @@ import SwiftUI
 ///               showArrow: false,
 ///               action: { router.navigate(to: .auth) })
 /// ```
-
-public struct MenuItemModel: Identifiable {
+public struct MenuItemModel: Identifiable , Equatable, Hashable{
     public let id = UUID()
     let icon: String
     let title: String
     let isDestructive: Bool
     let showArrow: Bool
     let action: () -> Void
+    /// An optional closure that returns the destination view for navigation.
+    @ViewBuilder let navigationDestination: () -> AnyView?
 
     @MainActor
     var iconColor: Color {
         isDestructive ? .red : .primaryColor
     }
+    
     @MainActor
     var textColor: Color {
         isDestructive ? .red : .primaryColor
     }
-
+    
     public init(
-        icon: String, title: String, isDestructive: Bool, showArrow: Bool,
-        action: @escaping () -> Void
+        icon: String,
+        title: String,
+        isDestructive: Bool,
+        showArrow: Bool,
+        action: @escaping () -> Void,
+        @ViewBuilder navigationDestination: @escaping () -> AnyView? = { nil }
     ) {
         self.icon = icon
         self.title = title
         self.isDestructive = isDestructive
         self.showArrow = showArrow
         self.action = action
+        self.navigationDestination = navigationDestination
     }
+    
+    public static func == (lhs: MenuItemModel, rhs: MenuItemModel) -> Bool {
+        return lhs.id == rhs.id
+    }
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+
 }
+
