@@ -53,6 +53,12 @@ extension View {
             }
         }
     }
+    
+    /// Adds a Shimmer Effect to the View
+    public func shimmer(duration: Double = 1.2) -> some View {
+        self
+            .modifier(ShimmerEffect(duration: duration))
+    }
 }
 
 
@@ -62,3 +68,5 @@ extension String {
         self[self.index(self.startIndex, offsetBy: idx)]
     }
 }
+
+

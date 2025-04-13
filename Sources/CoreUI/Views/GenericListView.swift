@@ -12,18 +12,30 @@ public struct GenericListView<Item: Identifiable, ListRow: View>: View {
     @State private var showAdd = false
     @State private var showDetails = false
     @State private var selectedItem: Item?
-    
+
     let title: String
     let itemsList: [Item]
+    let isLoading: Bool
+    let showPlusButton: Bool
+    let sheetFraction: CGFloat
+    let sheetHeight: CGFloat
+    @ViewBuilder let header: () -> any View
+    @ViewBuilder let addFrom: () ->  AnyView
     @ViewBuilder let listRow: (Item) -> ListRow
     let onAppearAction: () -> Void
     let onDelete: (Item) -> Void
     let onEdit: (Item) -> Void
     let onDetails: (Item) -> Void
-    
+
     public init(
         title: String,
         itemsList: [Item],
+        isLoading: Bool,
+        showPlusButton: Bool = true,
+        sheetFraction: CGFloat,
+        sheetHeight: CGFloat,
+        @ViewBuilder header: @escaping () -> any View,
+        @ViewBuilder addFrom: @escaping () ->  AnyView,
         @ViewBuilder listRow: @escaping (Item) -> ListRow,
         onAppearAction: @escaping () -> Void,
         onDelete: @escaping (Item) -> Void,
@@ -32,18 +44,31 @@ public struct GenericListView<Item: Identifiable, ListRow: View>: View {
     ) {
         self.title = title
         self.itemsList = itemsList
+        self.isLoading = isLoading
+        self.showPlusButton = showPlusButton
+        self.sheetFraction = sheetFraction
+        self.sheetHeight = sheetHeight
+        self.header = header
+        self.addFrom = addFrom
         self.listRow = listRow
         self.onAppearAction = onAppearAction
         self.onDelete = onDelete
         self.onEdit = onEdit
         self.onDetails = onDetails
     }
-    
+
     public var body: some View {
         VStack {
-            headerSection
+            titleSection
             searchField
+            AnyView(header())
+
             List {
+                if isLoading {
+                    ForEach(0..<4) { _ in
+                        LinearProgressView()
+                    }
+                }
                 ForEach(itemsList) { item in
                     listRow(item)
                         .listRowSeparator(.hidden)
@@ -66,7 +91,6 @@ public struct GenericListView<Item: Identifiable, ListRow: View>: View {
                         }
                 }
             }
-           // .scrollContentBackground(.hidden)
             .listStyle(.plain)
             .onAppear {
                 onAppearAction()
@@ -75,51 +99,59 @@ public struct GenericListView<Item: Identifiable, ListRow: View>: View {
                 onAppearAction()
             }
         }
+        .navigationBarBackButtonHidden(true)
         .sheet(isPresented: $showAdd) {
-            // add form here
+            if #available(iOS 16.4, *) {
+                addFrom()
+                    .presentationDetents([
+                        .fraction(sheetFraction), .height(sheetHeight),
+                    ])
+                    .presentationDragIndicator(.visible)
+                    .presentationCornerRadius(20)
+            } else {
+                addFrom()
+            }
         }
         .sheet(isPresented: $showDetails) {
             // details view here
         }
     }
-    
-    private var headerSection: some View {
-        HStack(spacing: 15) {
-            Text(title)
-                .font(.title)
-                .bold()
-                .foregroundColor(Color(.black))
-            Spacer(minLength: 0)
-            Button(action: {
-                showAdd.toggle()
-            }) {
-                Image(systemName: "plus.circle")
-                    .resizable()
-                    .frame(width: 20, height: 20)
-                    .padding()
-                    .background(Color.primaryColor)
-                    .foregroundColor(.white)
-                    .clipShape(Rectangle())
-                    .cornerRadius(10)
+
+    private var titleSection: some View {
+        VStack(alignment: .leading) {
+            BackButton()
+            HStack(spacing: 15) {
+                Text(title)
+                    .font(.title)
+                    .bold()
+                    .foregroundColor(Color(.black))
+                Spacer(minLength: 0)
+                if showPlusButton{
+                    plusButton
+                }
             }
-        }
-        .padding()
+        }.padding()
+
     }
-    
+
     private var searchField: some View {
         TextField("Search by name", text: $searchText)
             .padding()
             .textFieldStyle(RoundedBorderTextFieldStyle())
     }
-    
-    private var filteredItems: [Item] {
-        if searchText.isEmpty {
-            return itemsList
-        } else {
-            return itemsList.filter { item in
-                return true
-            }
+
+    private var plusButton: some View {
+        Button(action: {
+            showAdd.toggle()
+        }) {
+            Image(systemName: "plus.circle")
+                .resizable()
+                .frame(width: 20, height: 20)
+                .padding()
+                .background(Color.primaryColor)
+                .foregroundColor(.white)
+                .clipShape(Rectangle())
+                .cornerRadius(10)
         }
     }
 }
-
