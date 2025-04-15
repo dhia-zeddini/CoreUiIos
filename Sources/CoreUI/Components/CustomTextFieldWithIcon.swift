@@ -31,6 +31,7 @@ public struct CustomTextFieldWithIcon: View {
     let hint: String
     let icon: String
     let isSecure: Bool
+    let withStyle: Bool
     let maxWidth: CGFloat
     let maxHeight: CGFloat
     let keyboardType: UIKeyboardType
@@ -41,6 +42,7 @@ public struct CustomTextFieldWithIcon: View {
         hint: String,
         icon: String,
         isSecure: Bool = false,
+        withStyle: Bool = true,
         maxWidth: CGFloat = .infinity,
         maxHeight: CGFloat = 50,
         keyboardType: UIKeyboardType = .default
@@ -49,13 +51,16 @@ public struct CustomTextFieldWithIcon: View {
         self.hint = hint
         self.icon = icon
         self.isSecure = isSecure
+        self.withStyle = withStyle
         self.maxWidth = maxWidth
         self.maxHeight = maxHeight
         self.keyboardType = keyboardType
     }
     public var body: some View {
         HStack {
-            CircularIcon(icon: icon, maxWidth: maxHeight, maxHeight: maxHeight)
+            if withStyle {
+                CircularIcon(icon: icon, maxWidth: maxHeight, maxHeight: maxHeight)
+            }
             textField
                 .keyboardType(keyboardType)
             Spacer()
@@ -63,9 +68,13 @@ public struct CustomTextFieldWithIcon: View {
         }
         .frame(maxHeight: maxHeight)
         .background(
-            RoundedRectangle(cornerRadius: 25)
-                .stroke(Color.primaryColor, lineWidth: 2)
-                .shadow(radius: 1)
+            ZStack{
+                if withStyle{
+                    RoundedRectangle(cornerRadius: 25)
+                        .stroke(Color.primaryColor, lineWidth: 2)
+                        .shadow(radius: 1)
+                }
+            }
         )
         
     }

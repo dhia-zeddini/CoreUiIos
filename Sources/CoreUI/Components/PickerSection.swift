@@ -23,7 +23,7 @@ public struct PickerSection<Item: Identifiable & Equatable & Hashable, Content: 
     @Binding var selection: Item?
     @ViewBuilder let content: (Item) -> Content
     
-    public init(title: String, isLoading: Bool,height:CGFloat = 50, items: [Item], selection: Binding<Item?>, content: @escaping (Item) -> Content) {
+    public init(title: String, isLoading: Bool = false,height:CGFloat = 50, items: [Item], selection: Binding<Item?>, content: @escaping (Item) -> Content) {
         self.title = title
         self.isLoading = isLoading
         self.height = height

@@ -20,23 +20,27 @@ public struct GenericFormView<Content: View>: View {
     let content: () -> Content
     /// The action to execute when the confirm button is tapped.
     let confirmAction: () -> Void
-//    /// The action to execute when the the view apperears.
-//    let onAppearAction: () -> Void
-//    /// The action to execute when the confirm button is tapped.
-//    let confirmAction: () -> Void
-//    /// The action to execute when the confirm button is tapped.
-//    let confirmAction: () -> Void
+    
+    /// The action to execute when the view appears.
+    let onAppearAction: (() -> Void)?
+    /// The action to execute when the view disappers
+    let onDisappearAction: (() -> Void)?
+
 
     public init(
         headerTitle: String,
         confirmLabel: String = "Confirmer",
         @ViewBuilder content: @escaping () -> Content,
-        confirmAction: @escaping () -> Void
+        confirmAction: @escaping () -> Void,
+        onAppearAction: (() -> Void)? = nil,
+        onDisappearAction: (() -> Void)? = nil
     ) {
         self.headerTitle = headerTitle
         self.confirmLabel = confirmLabel
         self.content = content
         self.confirmAction = confirmAction
+        self.onAppearAction = onAppearAction
+        self.onDisappearAction = onDisappearAction
     }
 
     public var body: some View {
@@ -57,6 +61,7 @@ public struct GenericFormView<Content: View>: View {
             PrimaryButton(label: confirmLabel, action: confirmAction)
                 .padding(.bottom, paddingL)
                 .padding(.horizontal,paddingL)
-        }
+        }.onAppear(perform: onAppearAction)
+            .onDisappear(perform: onDisappearAction)
     }
 }

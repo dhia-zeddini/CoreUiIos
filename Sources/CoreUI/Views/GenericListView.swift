@@ -8,8 +8,6 @@
 import SwiftUI
 
 public struct GenericListView<Item: Identifiable, ListRow: View>: View {
-    @State private var searchText = ""
-    @State private var showAdd = false
     @State private var showDetails = false
     @State private var selectedItem: Item?
 
@@ -17,12 +15,14 @@ public struct GenericListView<Item: Identifiable, ListRow: View>: View {
     let itemsList: [Item]
     let isLoading: Bool
     let showPlusButton: Bool
+    @Binding var showAddForm: Bool
     let sheetFraction: CGFloat
     let sheetHeight: CGFloat
     @ViewBuilder let header: () -> any View
     @ViewBuilder let addFrom: () ->  AnyView
     @ViewBuilder let listRow: (Item) -> ListRow
     let onAppearAction: () -> Void
+    let paginationAction: () -> Void
     let onDelete: (Item) -> Void
     let onEdit: (Item) -> Void
     let onDetails: (Item) -> Void
@@ -32,12 +32,14 @@ public struct GenericListView<Item: Identifiable, ListRow: View>: View {
         itemsList: [Item],
         isLoading: Bool,
         showPlusButton: Bool = true,
+        showAddForm: Binding<Bool>,
         sheetFraction: CGFloat,
         sheetHeight: CGFloat,
         @ViewBuilder header: @escaping () -> any View,
         @ViewBuilder addFrom: @escaping () ->  AnyView,
         @ViewBuilder listRow: @escaping (Item) -> ListRow,
         onAppearAction: @escaping () -> Void,
+        paginationAction: @escaping () -> Void = {},
         onDelete: @escaping (Item) -> Void,
         onEdit: @escaping (Item) -> Void,
         onDetails: @escaping (Item) -> Void
@@ -46,12 +48,14 @@ public struct GenericListView<Item: Identifiable, ListRow: View>: View {
         self.itemsList = itemsList
         self.isLoading = isLoading
         self.showPlusButton = showPlusButton
+        self._showAddForm = showAddForm
         self.sheetFraction = sheetFraction
         self.sheetHeight = sheetHeight
         self.header = header
         self.addFrom = addFrom
         self.listRow = listRow
         self.onAppearAction = onAppearAction
+        self.paginationAction = paginationAction
         self.onDelete = onDelete
         self.onEdit = onEdit
         self.onDetails = onDetails
@@ -60,9 +64,7 @@ public struct GenericListView<Item: Identifiable, ListRow: View>: View {
     public var body: some View {
         VStack {
             titleSection
-            searchField
             AnyView(header())
-
             List {
                 if isLoading {
                     ForEach(0..<4) { _ in
@@ -89,6 +91,12 @@ public struct GenericListView<Item: Identifiable, ListRow: View>: View {
                         .onTapGesture {
                             onDetails(item)
                         }
+                    if item.id == itemsList.last?.id && !isLoading {
+                        ProgressView()
+                            .onAppear {
+                                paginationAction()
+                            }
+                    }
                 }
             }
             .listStyle(.plain)
@@ -100,7 +108,7 @@ public struct GenericListView<Item: Identifiable, ListRow: View>: View {
             }
         }
         .navigationBarBackButtonHidden(true)
-        .sheet(isPresented: $showAdd) {
+        .sheet(isPresented: $showAddForm) {
             if #available(iOS 16.4, *) {
                 addFrom()
                     .presentationDetents([
@@ -130,19 +138,12 @@ public struct GenericListView<Item: Identifiable, ListRow: View>: View {
                     plusButton
                 }
             }
-        }.padding()
+        }.padding(.horizontal)
 
     }
-
-    private var searchField: some View {
-        TextField("Search by name", text: $searchText)
-            .padding()
-            .textFieldStyle(RoundedBorderTextFieldStyle())
-    }
-
     private var plusButton: some View {
         Button(action: {
-            showAdd.toggle()
+            showAddForm.toggle()
         }) {
             Image(systemName: "plus.circle")
                 .resizable()

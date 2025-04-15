@@ -22,6 +22,6 @@ struct BackButton: View {
                         .font(.title2)
                 })
             Spacer()
-        }.padding(.vertical)
+        }.padding(.vertical,paddingXS)
     }
 }
