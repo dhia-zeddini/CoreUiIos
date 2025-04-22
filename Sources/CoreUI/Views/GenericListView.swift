@@ -10,22 +10,23 @@ import SwiftUI
 public struct GenericListView<Item: Identifiable, ListRow: View>: View {
     @State private var showDetails = false
     @State private var selectedItem: Item?
+    @State private var showDeleteAlert = false
 
     let title: String
     let itemsList: [Item]
     let isLoading: Bool
     let showPlusButton: Bool
     @Binding var showAddForm: Bool
+    @Binding var triggerPagination: Bool
     let sheetFraction: CGFloat
     let sheetHeight: CGFloat
     @ViewBuilder let header: () -> any View
     @ViewBuilder let addFrom: () ->  AnyView
     @ViewBuilder let listRow: (Item) -> ListRow
+    @ViewBuilder let detailsView: (Item?) ->  AnyView
     let onAppearAction: () -> Void
     let paginationAction: () -> Void
-    let onDelete: (Item) -> Void
-    let onEdit: (Item) -> Void
-    let onDetails: (Item) -> Void
+    let onDelete: (Item?) -> Void
 
     public init(
         title: String,
@@ -33,32 +34,32 @@ public struct GenericListView<Item: Identifiable, ListRow: View>: View {
         isLoading: Bool,
         showPlusButton: Bool = true,
         showAddForm: Binding<Bool>,
+        triggerPagination: Binding<Bool> = .constant(false),
         sheetFraction: CGFloat,
         sheetHeight: CGFloat,
         @ViewBuilder header: @escaping () -> any View,
-        @ViewBuilder addFrom: @escaping () ->  AnyView,
+        @ViewBuilder addFrom: @escaping () ->  AnyView = {AnyView(EmptyView())},
         @ViewBuilder listRow: @escaping (Item) -> ListRow,
+        @ViewBuilder detailsView: @escaping (Item?) ->  AnyView = {_ in AnyView(EmptyView())},
         onAppearAction: @escaping () -> Void,
         paginationAction: @escaping () -> Void = {},
-        onDelete: @escaping (Item) -> Void,
-        onEdit: @escaping (Item) -> Void,
-        onDetails: @escaping (Item) -> Void
+        onDelete: @escaping (Item?) -> Void
     ) {
         self.title = title
         self.itemsList = itemsList
         self.isLoading = isLoading
         self.showPlusButton = showPlusButton
         self._showAddForm = showAddForm
+        self._triggerPagination = triggerPagination
         self.sheetFraction = sheetFraction
         self.sheetHeight = sheetHeight
         self.header = header
         self.addFrom = addFrom
         self.listRow = listRow
+        self.detailsView = detailsView
         self.onAppearAction = onAppearAction
         self.paginationAction = paginationAction
         self.onDelete = onDelete
-        self.onEdit = onEdit
-        self.onDetails = onDetails
     }
 
     public var body: some View {
@@ -77,21 +78,18 @@ public struct GenericListView<Item: Identifiable, ListRow: View>: View {
                         .listRowBackground(Color.clear)
                         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                             Button {
-                                onDelete(item)
+                                selectedItem = item
+                                showDeleteAlert = true
                             } label: {
-                                Label("Delete", systemImage: "trash")
+                                Label(DeleteAlertConfirmationButton, systemImage: "trash")
                             }
                             .tint(.red)
-                            Button {
-                                onEdit(item)
-                            } label: {
-                                Label("Edit", systemImage: "pencil")
-                            }
                         }
                         .onTapGesture {
-                            onDetails(item)
+                            selectedItem = item
+                            showDetails.toggle()
                         }
-                    if item.id == itemsList.last?.id && !isLoading {
+                    if item.id == itemsList.last?.id && !isLoading && triggerPagination{
                         ProgressView()
                             .onAppear {
                                 paginationAction()
@@ -121,7 +119,26 @@ public struct GenericListView<Item: Identifiable, ListRow: View>: View {
             }
         }
         .sheet(isPresented: $showDetails) {
-            // details view here
+            if #available(iOS 16.4, *) {
+                detailsView(selectedItem)
+                    .presentationDetents([
+                        .fraction(sheetFraction), .height(sheetHeight),
+                    ])
+                    .presentationDragIndicator(.visible)
+                    .presentationCornerRadius(20)
+            } else {
+                detailsView(selectedItem)
+            }
+        }
+        .alert(isPresented:$showDeleteAlert) {
+            Alert(
+                title: Text(DeleteAlertTitle),
+                message: Text(DeleteAlertMessage),
+                primaryButton: .destructive(Text(DeleteAlertConfirmationButton)) {
+                    onDelete(selectedItem)
+                },
+                secondaryButton: .cancel()
+            )
         }
     }
 

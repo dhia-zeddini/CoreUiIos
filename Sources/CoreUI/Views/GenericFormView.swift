@@ -15,7 +15,12 @@ public struct GenericFormView<Content: View>: View {
     /// The header title of the form.
     let headerTitle: String
     /// The text for the confirm button.
-    let confirmLabel: String
+    let confirmLabel: String?
+
+    /// A Binding bool variable to indicate id the form is disabled.
+    @Binding var formDisabled: Bool
+    
+    let isEditing: Bool
     /// A view builder closure that provides the form content.
     let content: () -> Content
     /// The action to execute when the confirm button is tapped.
@@ -29,7 +34,9 @@ public struct GenericFormView<Content: View>: View {
 
     public init(
         headerTitle: String,
-        confirmLabel: String = "Confirmer",
+        confirmLabel: String? = nil,
+        formDisabled: Binding<Bool> = .constant(false),
+        isEditing: Bool = false,
         @ViewBuilder content: @escaping () -> Content,
         confirmAction: @escaping () -> Void,
         onAppearAction: (() -> Void)? = nil,
@@ -37,6 +44,8 @@ public struct GenericFormView<Content: View>: View {
     ) {
         self.headerTitle = headerTitle
         self.confirmLabel = confirmLabel
+        self._formDisabled = formDisabled
+        self.isEditing = isEditing
         self.content = content
         self.confirmAction = confirmAction
         self.onAppearAction = onAppearAction
@@ -46,21 +55,36 @@ public struct GenericFormView<Content: View>: View {
     public var body: some View {
         VStack(spacing: 16) {
             // Form header
-            Text(headerTitle)
-                .font(.title2.bold())
-                .foregroundColor(.primaryColor)
-                .padding(.top, 16)
+            HStack{
+                Spacer()
+                Text(headerTitle)
+                    .font(.title2.bold())
+                    .foregroundColor(.primaryColor)
+                    .padding(.top, 16)
+                Spacer()
+                if isEditing {
+                    Button(action:{
+                        formDisabled.toggle()
+                    }){
+                        Image(systemName: "square.and.pencil")
+                            .foregroundColor(.primaryColor)
+                    }
+                }
+            }.padding(.horizontal)
             
             // Render custom form content provided by the caller.
             Form {
                 content()
             }
             .listStyle(GroupedListStyle())
+            .disabled(formDisabled)
             
             // Confirm button
-            PrimaryButton(label: confirmLabel, action: confirmAction)
-                .padding(.bottom, paddingL)
-                .padding(.horizontal,paddingL)
+            if !formDisabled , let label = confirmLabel {
+                PrimaryButton(label: label, action: confirmAction)
+                    .padding(.bottom, paddingL)
+                    .padding(.horizontal,paddingL)
+            }
         }.onAppear(perform: onAppearAction)
             .onDisappear(perform: onDisappearAction)
     }
